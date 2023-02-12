@@ -88,7 +88,7 @@ public class BalanceTest {
         $("span[data-test-id='from'] input").shouldBe(visible);
         $("span[data-test-id='from'] input").click();
         //TODO заменить Keys.COMMAND на Keys.CONTROL перед пушем
-        $("span[data-test-id='from'] input").sendKeys(Keys.chord(Keys.COMMAND + "A"), Keys.BACK_SPACE);
+        $("span[data-test-id='from'] input").sendKeys(Keys.chord(Keys.CONTROL + "A"), Keys.BACK_SPACE);
         $("span[data-test-id='from'] input").setValue(secondCardNumber);
 
         //сравнение карты отображаемой в поле "Куда" с картой, на которую осуществляется перевод
