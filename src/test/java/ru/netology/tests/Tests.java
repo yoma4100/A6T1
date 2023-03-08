@@ -4,18 +4,28 @@ import com.codeborne.selenide.Configuration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static com.codeborne.selenide.Selenide.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import ru.netology.data.DataHelper;
 import ru.netology.pages.DashboardPage;
 import ru.netology.pages.LoginPage;
 import ru.netology.pages.TransferPage;
 import ru.netology.pages.VerificationPage;
 
-import static com.codeborne.selenide.Condition.text;
-import static com.codeborne.selenide.Selenide.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 public class Tests {
     private DashboardPage dashboardPage;
+
+    DataHelper.CardNumbers cardNumbers = DataHelper.getCardNumbers();
+
+    DataHelper.Amount transferAmount = DataHelper.getAmount();
+
+    String loginPageHeader = "Мы гарантируем безопасность ваших данных";
+    String verificationPageHeader = "Необходимо подтверждение";
+    String dashboardPageHeader = "Ваши карты";
+    String transferPageHeader = "Пополнение карты";
+
 
     @BeforeEach
     void setUp() {
@@ -23,9 +33,9 @@ public class Tests {
         clearBrowserCookies();
         clearBrowserLocalStorage();
 
-        LoginPage loginPage = new LoginPage();
-        VerificationPage verificationPage = loginPage.validLogin();
-        dashboardPage = verificationPage.validVerify();
+        LoginPage loginPage = new LoginPage(loginPageHeader);
+        VerificationPage verificationPage = loginPage.validLogin(verificationPageHeader);
+        dashboardPage = verificationPage.validVerify(dashboardPageHeader);
     }
 
     @AfterEach
@@ -37,14 +47,14 @@ public class Tests {
     @Test
     void shouldTransferMoneyFromFirstToSecondCard() {
         int amount = DataHelper.getTransferAmount();
-        int balance1stCardStart = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardStart = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
+        int balance1stCardStart = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
+        int balance2ndCardStart = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
         TransferPage transferPage = dashboardPage.depositToCard2();
-        transferPage.checkHeading();
-        transferPage.transferMoneyFromFirstToSecondCard(amount);
-        dashboardPage = new DashboardPage();
-        int balance1stCardFact = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardFact = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
+        transferPage.checkHeading(transferPageHeader);
+        transferPage.transferMoney(amount, cardNumbers.getFirstCardNumber(), cardNumbers.getSecondCardNumber());
+        dashboardPage = new DashboardPage(dashboardPageHeader);
+        int balance1stCardFact = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
+        int balance2ndCardFact = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
         int balance1stCardExp = balance1stCardStart - amount;
         int balance2ndCardExp = balance2ndCardStart + amount;
         assertEquals(balance1stCardFact, balance1stCardExp);
@@ -53,15 +63,15 @@ public class Tests {
 
     @Test
     void shouldTransferMoneyFromSecondToFirstCard() {
-        int amount = DataHelper.getTransferAmount();
-        int balance1stCardStart = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardStart = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
+        int amount = transferAmount.getAmount();
+        int balance1stCardStart = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
+        int balance2ndCardStart = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
         TransferPage transferPage = dashboardPage.depositToCard1();
-        transferPage.checkHeading();
-        transferPage.transferMoneyFromSecondToFirstCard(amount);
-        dashboardPage = new DashboardPage();
-        int balance1stCardFact = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardFact = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
+        transferPage.checkHeading(transferPageHeader);
+        transferPage.transferMoney(amount, cardNumbers.getSecondCardNumber(), cardNumbers.getFirstCardNumber());
+        dashboardPage = new DashboardPage(dashboardPageHeader);
+        int balance1stCardFact = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
+        int balance2ndCardFact = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
         int balance1stCardExp = balance1stCardStart + amount;
         int balance2ndCardExp = balance2ndCardStart - amount;
         assertEquals(balance1stCardFact, balance1stCardExp);
@@ -69,76 +79,52 @@ public class Tests {
     }
 
     @Test
-        // данный тест должен приводить к появлению какого-нибудь информера о невозможности перевода суммы
-        // на карту отправителя, как следствие, падению, но у нас есть баг
-        // https://github.com/yoma4100/A6T1/issues/1
-    void shouldTransferMoneyFromFirstToFirstCard() {
-        int amount = DataHelper.getTransferAmount();
-        int balance1stCardStart = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardStart = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
+    void shouldNotTransferMoneyFromFirstToFirstCard() {
+        int amount = transferAmount.getAmount();
         TransferPage transferPage = dashboardPage.depositToCard1();
-        transferPage.checkHeading();
-        transferPage.transferMoneyFromFirstToFirstCard(amount);
-
-        //TODO удалить часть кода ниже после починки бага https://github.com/yoma4100/A6T1/issues/1
-        dashboardPage = new DashboardPage();
-        int balance1stCardFact = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardFact = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
-        int balance1stCardExp = balance1stCardStart;
-        int balance2ndCardExp = balance2ndCardStart;
-        assertEquals(balance1stCardFact, balance1stCardExp);
-        assertEquals(balance2ndCardFact, balance2ndCardExp);
+        transferPage.checkHeading(transferPageHeader);
+        transferPage.transferMoney(amount, cardNumbers.getFirstCardNumber(), cardNumbers.getFirstCardNumber());
+        transferPage.checkError();
     }
 
     @Test
-        // данный тест должен приводить к появлению какого-нибудь информера о невозможности перевода суммы
-        // на карту отправителя, как следствие, падению, но у нас есть баг
-        // https://github.com/yoma4100/A6T1/issues/1
-    void shouldTransferMoneyFromSecondToSecondCard() {
-        int amount = DataHelper.getTransferAmount();
-        int balance1stCardStart = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardStart = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
+    void shouldNotTransferMoneyFromSecondToSecondCard() {
+        int amount = transferAmount.getAmount();
         TransferPage transferPage = dashboardPage.depositToCard2();
-        transferPage.checkHeading();
-        transferPage.transferMoneyFromSecondToSecondCard(amount);
-
-        //TODO удалить часть кода ниже после починки бага https://github.com/yoma4100/A6T1/issues/1
-        dashboardPage = new DashboardPage();
-        int balance1stCardFact = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardFact = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
-        int balance1stCardExp = balance1stCardStart;
-        int balance2ndCardExp = balance2ndCardStart;
-        assertEquals(balance1stCardFact, balance1stCardExp);
-        assertEquals(balance2ndCardFact, balance2ndCardExp);
+        transferPage.checkHeading(transferPageHeader);
+        transferPage.transferMoney(amount, cardNumbers.getSecondCardNumber(), cardNumbers.getSecondCardNumber());
+        transferPage.checkError();
     }
 
     @Test
-    void shouldTransferMoneyFromNonExistToSecondCard() {
-        int amount = DataHelper.getTransferAmount();
+    void shouldNotTransferMoneyFromNonExistToSecondCard() {
+        int amount = transferAmount.getAmount();
         TransferPage transferPage = dashboardPage.depositToCard2();
-        transferPage.checkHeading();
-        transferPage.transferMoneyFromNonExistToSecondCard(amount);
+        transferPage.checkHeading(transferPageHeader);
+        transferPage.transferMoney(amount, cardNumbers.getNonExistCardNumber(), cardNumbers.getSecondCardNumber());
+        transferPage.checkError();
     }
 
     @Test
-    void shouldTransferMoneyFromNonExistToFirstCard() {
-        int amount = DataHelper.getTransferAmount();
+    void shouldNotTransferMoneyFromNonExistToFirstCard() {
+        int amount = transferAmount.getAmount();
         TransferPage transferPage = dashboardPage.depositToCard1();
-        transferPage.checkHeading();
-        transferPage.transferMoneyFromNonExistToFirstCard(amount);
+        transferPage.checkHeading(transferPageHeader);
+        transferPage.transferMoney(amount, cardNumbers.getNonExistCardNumber(), cardNumbers.getFirstCardNumber());
+        transferPage.checkError();
     }
 
     @Test
     void shouldTransferAllMoneyFromFirstToSecondCard() {
-        int balance1stCardStart = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardStart = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
+        int balance1stCardStart = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
+        int balance2ndCardStart = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
         TransferPage transferPage = dashboardPage.depositToCard2();
-        transferPage.checkHeading();
-        transferPage.transferMoneyFromFirstToSecondCard(balance1stCardStart);
-        dashboardPage = new DashboardPage();
-        int balance1stCardFact = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardFact = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
-        int balance1stCardExp = balance1stCardStart - balance1stCardStart;
+        transferPage.checkHeading(transferPageHeader);
+        transferPage.transferMoney(balance1stCardStart, cardNumbers.getFirstCardNumber(), cardNumbers.getSecondCardNumber());
+        dashboardPage = new DashboardPage(dashboardPageHeader);
+        int balance1stCardFact = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
+        int balance2ndCardFact = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
+        int balance1stCardExp = 0;
         int balance2ndCardExp = balance2ndCardStart + balance1stCardStart;
         assertEquals(balance1stCardFact, balance1stCardExp);
         assertEquals(balance2ndCardFact, balance2ndCardExp);
@@ -146,75 +132,51 @@ public class Tests {
 
     @Test
     void shouldTransferAllMoneyFromSecondToFirstCard() {
-        int balance1stCardStart = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardStart = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
+        int balance1stCardStart = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
+        int balance2ndCardStart = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
         TransferPage transferPage = dashboardPage.depositToCard1();
-        transferPage.checkHeading();
-        transferPage.transferMoneyFromSecondToFirstCard(balance2ndCardStart);
-        dashboardPage = new DashboardPage();
-        int balance1stCardFact = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardFact = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
+        transferPage.checkHeading(transferPageHeader);
+        transferPage.transferMoney(balance2ndCardStart, cardNumbers.getSecondCardNumber(), cardNumbers.getFirstCardNumber());
+        dashboardPage = new DashboardPage(dashboardPageHeader);
+        int balance1stCardFact = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
+        int balance2ndCardFact = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
         int balance1stCardExp = balance1stCardStart + balance2ndCardStart;
-        int balance2ndCardExp = balance2ndCardStart - balance2ndCardStart;
+        int balance2ndCardExp = 0;
         assertEquals(balance1stCardFact, balance1stCardExp);
         assertEquals(balance2ndCardFact, balance2ndCardExp);
     }
 
     @Test
-        // данный тест должен приводить к появлению какого-нибудь информера о невозможности перевода суммы
-        // большей доступного остатка и, как следствие, падению, но у нас есть баг
-        // https://github.com/yoma4100/A6T1/issues/2
-    void shouldTransferMoreThanAmountFromFirstToSecondCard() {
-        int balance1stCardStart = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardStart = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
+    void shouldNotTransferMoreThanAmountFromFirstToSecondCard() {
+        int balance1stCardStart = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
         int amount = balance1stCardStart + 1;
         TransferPage transferPage = dashboardPage.depositToCard2();
-        transferPage.checkHeading();
-        transferPage.transferMoneyFromFirstToSecondCard(amount);
-
-        //TODO удалить часть кода ниже после починки бага https://github.com/yoma4100/A6T1/issues/2
-        dashboardPage = new DashboardPage();
-        int balance1stCardFact = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardFact = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
-        int balance1stCardExp = balance1stCardStart - amount;
-        int balance2ndCardExp = balance2ndCardStart + amount;
-        assertEquals(balance1stCardFact, balance1stCardExp);
-        assertEquals(balance2ndCardFact, balance2ndCardExp);
+        transferPage.checkHeading(transferPageHeader);
+        transferPage.transferMoney(amount, cardNumbers.getFirstCardNumber(), cardNumbers.getSecondCardNumber());
+        transferPage.checkError();
     }
 
     @Test
-        // данный тест должен приводить к появлению какого-нибудь информера о невозможности перевода суммы
-        // большей доступного остатка и, как следствие, падению, но у нас есть баг
-        // https://github.com/yoma4100/A6T1/issues/2
-    void shouldTransferMoreThanAmountFromSecondToFirstCard() {
-        int balance1stCardStart = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardStart = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
+    void shouldNotTransferMoreThanAmountFromSecondToFirstCard() {
+        int balance2ndCardStart = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
         int amount = balance2ndCardStart + 1;
         TransferPage transferPage = dashboardPage.depositToCard1();
-        transferPage.checkHeading();
-        transferPage.transferMoneyFromSecondToFirstCard(amount);
-
-        //TODO удалить часть кода ниже после починки бага https://github.com/yoma4100/A6T1/issues/2
-        dashboardPage = new DashboardPage();
-        int balance1stCardFact = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardFact = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
-        int balance1stCardExp = balance1stCardStart + amount;
-        int balance2ndCardExp = balance2ndCardStart - amount;
-        assertEquals(balance1stCardFact, balance1stCardExp);
-        assertEquals(balance2ndCardFact, balance2ndCardExp);
+        transferPage.checkHeading(transferPageHeader);
+        transferPage.transferMoney(amount, cardNumbers.getSecondCardNumber(), cardNumbers.getFirstCardNumber());
+        transferPage.checkError();
     }
 
     @Test
-    void shouldTransferNegativeAmountFromFirstToSecondCard() {
-        int amount = -DataHelper.getTransferAmount();
-        int balance1stCardStart = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardStart = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
+    void shouldChangeNegativeAmountFromFirstToSecondCard() {
+        int amount = -transferAmount.getAmount();
+        int balance1stCardStart = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
+        int balance2ndCardStart = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
         TransferPage transferPage = dashboardPage.depositToCard2();
-        transferPage.checkHeading();
-        transferPage.transferMoneyFromFirstToSecondCard(amount);
-        dashboardPage = new DashboardPage();
-        int balance1stCardFact = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardFact = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
+        transferPage.checkHeading(transferPageHeader);
+        transferPage.transferMoney(amount, cardNumbers.getFirstCardNumber(), cardNumbers.getSecondCardNumber());
+        dashboardPage = new DashboardPage(dashboardPageHeader);
+        int balance1stCardFact = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
+        int balance2ndCardFact = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
         int balance1stCardExp = balance1stCardStart + amount;
         int balance2ndCardExp = balance2ndCardStart - amount;
         assertEquals(balance1stCardFact, balance1stCardExp);
@@ -222,16 +184,16 @@ public class Tests {
     }
 
     @Test
-    void shouldTransferNegativeAmountFromSecondToFirstCard() {
-        int amount = -DataHelper.getTransferAmount();
-        int balance1stCardStart = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardStart = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
+    void shouldChangeNegativeAmountFromSecondToFirstCard() {
+        int amount = -transferAmount.getAmount();
+        int balance1stCardStart = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
+        int balance2ndCardStart = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
         TransferPage transferPage = dashboardPage.depositToCard1();
-        transferPage.checkHeading();
-        transferPage.transferMoneyFromSecondToFirstCard(amount);
-        dashboardPage = new DashboardPage();
-        int balance1stCardFact = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardFact = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
+        transferPage.checkHeading(transferPageHeader);
+        transferPage.transferMoney(amount, cardNumbers.getSecondCardNumber(), cardNumbers.getFirstCardNumber());
+        dashboardPage = new DashboardPage(dashboardPageHeader);
+        int balance1stCardFact = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
+        int balance2ndCardFact = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
         int balance1stCardExp = balance1stCardStart - amount;
         int balance2ndCardExp = balance2ndCardStart + amount;
         assertEquals(balance1stCardFact, balance1stCardExp);
@@ -239,92 +201,50 @@ public class Tests {
     }
 
     @Test
-    void shouldTransferZeroFromFirstToSecondCard() {
+    void shouldNotTransferZeroFromFirstToSecondCard() {
         int amount = 0;
-        int balance1stCardStart = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardStart = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
         TransferPage transferPage = dashboardPage.depositToCard2();
-        transferPage.checkHeading();
-        transferPage.transferMoneyFromFirstToSecondCard(amount);
-        dashboardPage = new DashboardPage();
-        int balance1stCardFact = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardFact = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
-        int balance1stCardExp = balance1stCardStart - amount;
-        int balance2ndCardExp = balance2ndCardStart + amount;
-        assertEquals(balance1stCardFact, balance1stCardExp);
-        assertEquals(balance2ndCardFact, balance2ndCardExp);
+        transferPage.checkHeading(transferPageHeader);
+        transferPage.transferMoney(amount, cardNumbers.getFirstCardNumber(), cardNumbers.getSecondCardNumber());
+        transferPage.checkError();
     }
 
     @Test
-    void shouldTransferZeroFromSecondToFirstCard() {
+    void shouldNotTransferZeroFromSecondToFirstCard() {
         int amount = 0;
-        int balance1stCardStart = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardStart = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
         TransferPage transferPage = dashboardPage.depositToCard1();
-        transferPage.checkHeading();
-        transferPage.transferMoneyFromSecondToFirstCard(amount);
-        dashboardPage = new DashboardPage();
-        int balance1stCardFact = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardFact = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
-        int balance1stCardExp = balance1stCardStart + amount;
-        int balance2ndCardExp = balance2ndCardStart - amount;
-        assertEquals(balance1stCardFact, balance1stCardExp);
-        assertEquals(balance2ndCardFact, balance2ndCardExp);
+        transferPage.checkHeading(transferPageHeader);
+        transferPage.transferMoney(amount, cardNumbers.getSecondCardNumber(), cardNumbers.getFirstCardNumber());
+        transferPage.checkError();
     }
 
     @Test
-        // данный тест должен приводить к появлению какого-нибудь информера о невозможности перевода суммы
-        // без указания суммы, как следствие, падению, но у нас есть баг
-        // https://github.com/yoma4100/A6T1/issues/4
-    void shouldTransferEmptyAmountFromFirstToSecondCard() {
-        int balance1stCardStart = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardStart = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
+    void shouldNotTransferEmptyAmountFromFirstToSecondCard() {
         TransferPage transferPage = dashboardPage.depositToCard2();
-        transferPage.checkHeading();
-        transferPage.transferEmptyAmountFirstToSecondCard();
-
-        //TODO удалить часть кода ниже после починки бага https://github.com/yoma4100/A6T1/issues/4
-        dashboardPage = new DashboardPage();
-        int balance1stCardFact = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardFact = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
-        int balance1stCardExp = balance1stCardStart;
-        int balance2ndCardExp = balance2ndCardStart;
-        assertEquals(balance1stCardFact, balance1stCardExp);
-        assertEquals(balance2ndCardFact, balance2ndCardExp);
+        transferPage.checkHeading(transferPageHeader);
+        transferPage.transferMoney(cardNumbers.getFirstCardNumber(), cardNumbers.getSecondCardNumber());
+        transferPage.checkError();
     }
 
     @Test
-        // данный тест должен приводить к появлению какого-нибудь информера о невозможности перевода суммы
-        // без указания суммы, как следствие, падению, но у нас есть баг
-        // https://github.com/yoma4100/A6T1/issues/4
-    void shouldTransferEmptyAmountFromSecondToFirstCard() {
-        int balance1stCardStart = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardStart = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
+    void shouldNotTransferEmptyAmountFromSecondToFirstCard() {
         TransferPage transferPage = dashboardPage.depositToCard1();
-        transferPage.checkHeading();
-        transferPage.transferEmptyAmountFromSecondToFirstCard();
-
-        //TODO удалить часть кода ниже после починки бага https://github.com/yoma4100/A6T1/issues/4
-        dashboardPage = new DashboardPage();
-        int balance1stCardFact = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardFact = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
-        int balance1stCardExp = balance1stCardStart;
-        int balance2ndCardExp = balance2ndCardStart;
-        assertEquals(balance1stCardFact, balance1stCardExp);
-        assertEquals(balance2ndCardFact, balance2ndCardExp);
+        transferPage.checkHeading(transferPageHeader);
+        transferPage.transferMoney(cardNumbers.getSecondCardNumber(), cardNumbers.getFirstCardNumber());
+        transferPage.checkError();
     }
 
     @Test
     void shouldCancelTransferFromFirstToSecondCard() {
-        int amount = DataHelper.getTransferAmount();
-        int balance1stCardStart = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardStart = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
+        int amount = transferAmount.getAmount();
+        int balance1stCardStart = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
+        int balance2ndCardStart = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
         TransferPage transferPage = dashboardPage.depositToCard2();
-        transferPage.checkHeading();
-        transferPage.cancelTransferFromFirstToSecondCard(amount);
-        dashboardPage = new DashboardPage();
-        int balance1stCardFact = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardFact = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
+        transferPage.checkHeading(transferPageHeader);
+        transferPage.cancelTransfer(amount, cardNumbers.getFirstCardNumber(), cardNumbers.getSecondCardNumber());
+        dashboardPage = new DashboardPage(dashboardPageHeader);
+        int balance1stCardFact = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
+        int balance2ndCardFact = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
         int balance1stCardExp = balance1stCardStart;
         int balance2ndCardExp = balance2ndCardStart;
         assertEquals(balance1stCardFact, balance1stCardExp);
@@ -333,15 +253,15 @@ public class Tests {
 
     @Test
     void shouldCancelTransferFromSecondToFirstCard() {
-        int amount = DataHelper.getTransferAmount();
-        int balance1stCardStart = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardStart = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
+        int amount = transferAmount.getAmount();
+        int balance1stCardStart = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
+        int balance2ndCardStart = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
         TransferPage transferPage = dashboardPage.depositToCard1();
-        transferPage.checkHeading();
-        transferPage.cancelTransferFromSecondToFirstCard(amount);
-        dashboardPage = new DashboardPage();
-        int balance1stCardFact = dashboardPage.getCardBalance(DataHelper.getFirstCardNumber());
-        int balance2ndCardFact = dashboardPage.getCardBalance(DataHelper.getSecondCardNumber());
+        transferPage.checkHeading(transferPageHeader);
+        transferPage.cancelTransfer(amount, cardNumbers.getSecondCardNumber(), cardNumbers.getFirstCardNumber());
+        dashboardPage = new DashboardPage(dashboardPageHeader);
+        int balance1stCardFact = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
+        int balance2ndCardFact = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
         int balance1stCardExp = balance1stCardStart;
         int balance2ndCardExp = balance2ndCardStart;
         assertEquals(balance1stCardFact, balance1stCardExp);

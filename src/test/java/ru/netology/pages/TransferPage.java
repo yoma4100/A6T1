@@ -6,7 +6,6 @@ import ru.netology.data.DataHelper;
 
 import static com.codeborne.selenide.Condition.*;
 import static com.codeborne.selenide.Selenide.$;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TransferPage {
 
@@ -16,21 +15,21 @@ public class TransferPage {
     final SelenideElement toField = $(":nth-of-type(3) input.input__control");
     final SelenideElement transferButton = $("[data-test-id='action-transfer']");
     final SelenideElement cancelButton = $("[data-test-id='action-cancel']");
-
     final SelenideElement errorElement = $("[data-test-id='error-notification']");
-    final SelenideElement errorElementText = $("[data-test-id='error-notification'] div[class='notification__title']");
 
-    public void checkHeading() {
-        heading.shouldHave(text(DataHelper.getTransferPageHeader()));
+    public void checkHeading(String transferPageHeader) {
+        heading.shouldHave(text(transferPageHeader));
+    }
+
+    public void checkError() {
+        errorElement.shouldBe(visible);
     }
 
     public void setAmount(String amount) {
-        amountField.click();
         amountField.setValue(amount);
     }
 
     public void setFromCard(String cardNumber) {
-        fromField.click();
         fromField.sendKeys(Keys.chord(Keys.CONTROL + "A"), Keys.BACK_SPACE);
         fromField.setValue(cardNumber);
     }
@@ -45,86 +44,34 @@ public class TransferPage {
         cancelButton.click();
     }
 
+    public void transferMoney(String fromCardNumber, String toCardNumber) {
+        setFromCard(fromCardNumber);
+        DataHelper.checkToCard(toCardNumber);
+
+        toField.shouldBe(visible);
+        toField.shouldHave(value(DataHelper.checkToCard(toCardNumber)));
+
+        clickTransferButton();
+    }
+
     public void transferMoney(int amount, String fromCardNumber, String toCardNumber) {
         setAmount(String.valueOf(amount));
         setFromCard(fromCardNumber);
-        DataHelper.checkToCard(toField, toCardNumber);
+        DataHelper.checkToCard(toCardNumber);
 
-        //TODO дополнить проверки после починки бага https://github.com/yoma4100/A6T1/issues/1
         toField.shouldBe(visible);
-        toField.shouldHave(value(DataHelper.checkToCard(toField, toCardNumber)));
-
-        clickTransferButton();
-
-        if (errorElement.isDisplayed()) {
-            assertEquals("Ошибка", errorElementText.getText().trim());
-        }
-    }
-
-    public void transferMoneyFromFirstToSecondCard(int amount) {
-        transferMoney(amount, DataHelper.getFirstCardNumber(), DataHelper.getSecondCardNumber());
-    }
-
-    public void transferMoneyFromSecondToFirstCard(int amount) {
-        transferMoney(amount, DataHelper.getSecondCardNumber(), DataHelper.getFirstCardNumber());
-    }
-
-    public void transferMoneyFromFirstToFirstCard(int amount) {
-        transferMoney(amount, DataHelper.getFirstCardNumber(), DataHelper.getFirstCardNumber());
-    }
-
-    public void transferMoneyFromSecondToSecondCard(int amount) {
-        transferMoney(amount, DataHelper.getSecondCardNumber(), DataHelper.getSecondCardNumber());
-    }
-
-    public void transferMoneyFromNonExistToSecondCard(int amount) {
-        transferMoney(amount, DataHelper.getNonExistCardNumber(), DataHelper.getSecondCardNumber());
-    }
-
-    public void transferMoneyFromNonExistToFirstCard(int amount) {
-        transferMoney(amount, DataHelper.getNonExistCardNumber(), DataHelper.getFirstCardNumber());
-    }
-
-    public void transferEmptyAmountFirstToSecondCard() {
-        setFromCard(DataHelper.getFirstCardNumber());
-        DataHelper.checkToCard(toField, DataHelper.getSecondCardNumber());
-
-        //TODO дополнить проверки после починки бага https://github.com/yoma4100/A6T1/issues/4
-        toField.shouldBe(visible);
-        toField.shouldHave(value(DataHelper.checkToCard(toField, DataHelper.getSecondCardNumber())));
+        toField.shouldHave(value(DataHelper.checkToCard(toCardNumber)));
 
         clickTransferButton();
     }
 
-    public void transferEmptyAmountFromSecondToFirstCard() {
-        setFromCard(DataHelper.getSecondCardNumber());
-        DataHelper.checkToCard(toField, DataHelper.getFirstCardNumber());
-
-        //TODO дополнить проверки после починки бага https://github.com/yoma4100/A6T1/issues/4
-        toField.shouldBe(visible);
-        toField.shouldHave(value(DataHelper.checkToCard(toField, DataHelper.getFirstCardNumber())));
-
-        clickTransferButton();
-    }
-
-    public void cancelTransferFromFirstToSecondCard(int amount) {
+    public void cancelTransfer(int amount, String fromCardNumber, String toCardNumber) {
         setAmount(String.valueOf(amount));
-        setFromCard(DataHelper.getFirstCardNumber());
-        DataHelper.checkToCard(toField, DataHelper.getSecondCardNumber());
+        setFromCard(fromCardNumber);
+        DataHelper.checkToCard(toCardNumber);
 
         toField.shouldBe(visible);
-        toField.shouldHave(value(DataHelper.checkToCard(toField, DataHelper.getSecondCardNumber())));
-
-        clickCancelButton();
-    }
-
-    public void cancelTransferFromSecondToFirstCard(int amount) {
-        setAmount(String.valueOf(amount));
-        setFromCard(DataHelper.getSecondCardNumber());
-        DataHelper.checkToCard(toField, DataHelper.getFirstCardNumber());
-
-        toField.shouldBe(visible);
-        toField.shouldHave(value(DataHelper.checkToCard(toField, DataHelper.getFirstCardNumber())));
+        toField.shouldHave(value(DataHelper.checkToCard(toCardNumber)));
 
         clickCancelButton();
     }

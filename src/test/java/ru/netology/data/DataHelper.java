@@ -1,77 +1,118 @@
 package ru.netology.data;
 
-import com.codeborne.selenide.SelenideElement;
-
-import static com.codeborne.selenide.Condition.*;
 import static com.codeborne.selenide.Selenide.$;
 
 public class DataHelper {
-    public static String getLoginPageHeader() {
-        return "Мы гарантируем безопасность ваших данных";
+
+    public static class AuthInfo {
+        public String getLogin() {
+            return login;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        private String login;
+        private String password;
+
+        public AuthInfo(String login, String password) {
+            this.login = login;
+            this.password = password;
+        }
     }
 
-    public static String getVerificationPageHeader() {
-        return "Необходимо подтверждение";
+    public static AuthInfo getAuthInfo() {
+        return new AuthInfo("vasya", "qwerty123");
     }
 
-    public static String getDashboardPageHeader() {
-        return "Ваши карты";
+    public static class VerificationCode {
+        public String getVerificationCode() {
+            return verificationCode;
+        }
+
+        private String verificationCode;
+
+        public VerificationCode(String verificationCode) {
+            this.verificationCode = verificationCode;
+        }
     }
 
-    public static String getTransferPageHeader() {
-        return "Пополнение карты";
+    public static VerificationCode getVerificationCode() {
+        return new VerificationCode("12345");
     }
 
-    public static String getValidLogin() {
-        return "vasya";
+    public static class CardNumbers {
+        public String getFirstCardNumber() {
+            return firstCardNumber;
+        }
+
+        public String getSecondCardNumber() {
+            return secondCardNumber;
+        }
+
+        public String getNonExistCardNumber() {
+            return nonExistCardNumber;
+        }
+
+        private String firstCardNumber;
+        private String secondCardNumber;
+        private String nonExistCardNumber;
+
+        public CardNumbers(String firstCardNumber, String secondCardNumber, String nonExistCardNumber) {
+            this.firstCardNumber = firstCardNumber;
+            this.secondCardNumber = secondCardNumber;
+            this.nonExistCardNumber = nonExistCardNumber;
+        }
     }
 
-    public static String getValidPassword() {
-        return "qwerty123";
+    public static CardNumbers getCardNumbers() {
+        return new CardNumbers("5559 0000 0000 0001", "5559000000000002", "5559 0000 0000 0003");
     }
 
-    public static String getVerificationCode() {
-        return "12345";
+    public static class Amount {
+        public int getAmount() {
+            return amount;
+        }
+
+        private int amount;
+
+        public Amount(int amount) {
+            this.amount = amount;
+        }
     }
 
-    public static String getFirstCardNumber() {
-        return "5559 0000 0000 0001";
+    public static Amount getAmount() {
+        return new Amount(100);
     }
-
-    public static String getSecondCardNumber() {return "5559 0000 0000 0002";}
-    public static String getNonExistCardNumber() {return "5559 0000 0000 0003";}
 
     public static int getTransferAmount() {
         return 100;
     }
 
-    public static int getCardBalance(String cardNumber) {
-        String cardIndex = (cardNumber.charAt(cardNumber.length() - 1) == '1') ? "1" : "2";
+    public static int getCardBalance(String elementSelector) {
         String balanceStart = "баланс: ";
         String balanceFinish = " р.";
-        String balanceValue = $(".list__item:nth-of-type(" + cardIndex + ") div").getText();
+        String balanceValue = $(elementSelector).getText();
         int start = balanceValue.indexOf(balanceStart);
         int finish = balanceValue.indexOf(balanceFinish);
         balanceValue = balanceValue.substring(start + balanceStart.length(), finish);
         return Integer.parseInt(balanceValue);
     }
 
-    public static String checkToCard(SelenideElement toField, String expectedCardNumber) {
-        int startNumber = expectedCardNumber.length() - 4;
-        int endNumber = expectedCardNumber.length();
-        String outputNumber = "";
-
-        for (int i = 0; i < endNumber; i++) {
-            if (i < startNumber) {
-                if (expectedCardNumber.charAt(i) == ' ') {
-                    outputNumber += " ";
-                } else {
-                    outputNumber += "*";
-                }
-            } else {
-                outputNumber += expectedCardNumber.charAt(i);
+    public static String checkToCard(String expectedCardNumber) {
+        String digitsOnly = expectedCardNumber.replaceAll("\\D", "");
+        StringBuilder sb = new StringBuilder(digitsOnly);
+        for (int i = 4; i < sb.length(); i += 5) {
+            sb.insert(i, ' ');
+        }
+        String maskedPart = "";
+        for (int i = 0; i < digitsOnly.length() - 4; i++) {
+            maskedPart += "*";
+            if ((i + 1) % 4 == 0) {
+                maskedPart += " ";
             }
         }
-        return outputNumber;
+        return maskedPart + sb.substring(sb.length() - 4);
     }
 }

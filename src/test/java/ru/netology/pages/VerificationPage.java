@@ -12,16 +12,17 @@ public class VerificationPage {
     final SelenideElement heading = $(".paragraph");
     final SelenideElement codeField = $("[name='code']");
     final SelenideElement verifyButton = $("[data-test-id='action-verify']");
+    DataHelper.VerificationCode verifyCode = DataHelper.getVerificationCode();
 
-    public VerificationPage() {
-        heading.shouldHave(text(DataHelper.getVerificationPageHeader()));
+    public VerificationPage(String verificationPageHeader) {
+        heading.shouldHave(text(verificationPageHeader));
         codeField.shouldBe(visible);
     }
 
-    public DashboardPage validVerify() {
-        String verificationCode = DataHelper.getVerificationCode();
+    public DashboardPage validVerify(String dashboardPageHeader) {
+        String verificationCode = verifyCode.getVerificationCode();
         codeField.setValue(verificationCode);
         verifyButton.click();
-        return new DashboardPage();
+        return new DashboardPage(dashboardPageHeader);
     }
 }

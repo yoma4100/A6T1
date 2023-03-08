@@ -12,12 +12,15 @@ public class DashboardPage {
     final SelenideElement depositButton1 = $(":nth-of-type(1) [data-test-id='action-deposit']");
     final SelenideElement depositButton2 = $(":nth-of-type(2) [data-test-id='action-deposit']");
 
-    public DashboardPage() {
-        heading.shouldHave(text(DataHelper.getDashboardPageHeader()));
+    public DashboardPage(String dashboardPageHeader) {
+        heading.shouldHave(text(dashboardPageHeader));
     }
 
     public int getCardBalance(String cardNumber) {
-        return DataHelper.getCardBalance(cardNumber);
+        String cardIndex = cardNumber.charAt(cardNumber.length() - 1) == '1' ? "1" : "2";
+        String elementSelector = ".list__item:nth-of-type(" + cardIndex + ") div";
+
+        return DataHelper.getCardBalance(elementSelector);
     }
 
     public TransferPage depositToCard1() {

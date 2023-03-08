@@ -13,17 +13,19 @@ public class LoginPage {
     final SelenideElement passwordField = $("[name='password']");
     final SelenideElement loginButton = $("[data-test-id='action-login']");
 
-    public LoginPage() {
-        heading.shouldHave(text(DataHelper.getLoginPageHeader()));
+    DataHelper.AuthInfo authInfo = DataHelper.getAuthInfo();
+
+    public LoginPage(String loginPageHeader) {
+        heading.shouldHave(text(loginPageHeader));
         loginField.shouldBe(visible);
     }
 
-    public VerificationPage validLogin() {
-        String login = DataHelper.getValidLogin();
-        String password = DataHelper.getValidPassword();
+    public VerificationPage validLogin(String verificationPageHeader) {
+        String login = authInfo.getLogin();
+        String password = authInfo.getPassword();
         loginField.setValue(login);
         passwordField.setValue(password);
         loginButton.click();
-        return new VerificationPage();
+        return new VerificationPage(verificationPageHeader);
     }
 }
