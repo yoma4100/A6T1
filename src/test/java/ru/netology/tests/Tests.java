@@ -17,7 +17,7 @@ import ru.netology.pages.VerificationPage;
 public class Tests {
     private DashboardPage dashboardPage;
 
-    DataHelper.CardNumbers cardNumbers = DataHelper.getCardNumbers();
+    DataHelper.Cards cardNumbers = DataHelper.getCardNumbers();
     DataHelper.AuthInfo authInfo = DataHelper.getAuthInfo();
 
     DataHelper.VerificationCode verifyCode = DataHelper.getVerificationCode();
@@ -47,9 +47,9 @@ public class Tests {
 
     @Test
     void shouldTransferMoneyFromFirstToSecondCard() {
-        int amount = 100;
         int balance1stCardStart = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
         int balance2ndCardStart = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
+        int amount = DataHelper.getAmount(balance1stCardStart);
         TransferPage transferPage = dashboardPage.depositToCard2();
         transferPage.checkHeading(transferPageHeader);
         transferPage.transferMoney(amount, cardNumbers.getFirstCardNumber(), cardNumbers.getSecondCardNumber());
@@ -64,9 +64,9 @@ public class Tests {
 
     @Test
     void shouldTransferMoneyFromSecondToFirstCard() {
-        int amount = 100;
         int balance1stCardStart = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
         int balance2ndCardStart = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
+        int amount = DataHelper.getAmount(balance2ndCardStart);
         TransferPage transferPage = dashboardPage.depositToCard1();
         transferPage.checkHeading(transferPageHeader);
         transferPage.transferMoney(amount, cardNumbers.getSecondCardNumber(), cardNumbers.getFirstCardNumber());
@@ -81,7 +81,8 @@ public class Tests {
 
     @Test
     void shouldNotTransferMoneyFromFirstToFirstCard() {
-        int amount = 100;
+        int balance1stCardStart = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
+        int amount = DataHelper.getAmount(balance1stCardStart);
         TransferPage transferPage = dashboardPage.depositToCard1();
         transferPage.checkHeading(transferPageHeader);
         transferPage.transferMoney(amount, cardNumbers.getFirstCardNumber(), cardNumbers.getFirstCardNumber());
@@ -90,7 +91,8 @@ public class Tests {
 
     @Test
     void shouldNotTransferMoneyFromSecondToSecondCard() {
-        int amount = 100;
+        int balance2ndCardStart = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
+        int amount = DataHelper.getAmount(balance2ndCardStart);
         TransferPage transferPage = dashboardPage.depositToCard2();
         transferPage.checkHeading(transferPageHeader);
         transferPage.transferMoney(amount, cardNumbers.getSecondCardNumber(), cardNumbers.getSecondCardNumber());
@@ -99,7 +101,7 @@ public class Tests {
 
     @Test
     void shouldNotTransferMoneyFromNonExistToSecondCard() {
-        int amount = 100;
+        int amount = DataHelper.getAmount();
         TransferPage transferPage = dashboardPage.depositToCard2();
         transferPage.checkHeading(transferPageHeader);
         transferPage.transferMoney(amount, cardNumbers.getNonExistCardNumber(), cardNumbers.getSecondCardNumber());
@@ -108,7 +110,7 @@ public class Tests {
 
     @Test
     void shouldNotTransferMoneyFromNonExistToFirstCard() {
-        int amount = 100;
+        int amount = DataHelper.getAmount();
         TransferPage transferPage = dashboardPage.depositToCard1();
         transferPage.checkHeading(transferPageHeader);
         transferPage.transferMoney(amount, cardNumbers.getNonExistCardNumber(), cardNumbers.getFirstCardNumber());
@@ -169,9 +171,9 @@ public class Tests {
 
     @Test
     void shouldChangeNegativeAmountFromFirstToSecondCard() {
-        int amount = -100;
         int balance1stCardStart = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
         int balance2ndCardStart = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
+        int amount = -DataHelper.getAmount(balance1stCardStart);
         TransferPage transferPage = dashboardPage.depositToCard2();
         transferPage.checkHeading(transferPageHeader);
         transferPage.transferMoney(amount, cardNumbers.getFirstCardNumber(), cardNumbers.getSecondCardNumber());
@@ -186,9 +188,9 @@ public class Tests {
 
     @Test
     void shouldChangeNegativeAmountFromSecondToFirstCard() {
-        int amount = -100;
         int balance1stCardStart = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
         int balance2ndCardStart = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
+        int amount = -DataHelper.getAmount(balance2ndCardStart);
         TransferPage transferPage = dashboardPage.depositToCard1();
         transferPage.checkHeading(transferPageHeader);
         transferPage.transferMoney(amount, cardNumbers.getSecondCardNumber(), cardNumbers.getFirstCardNumber());
@@ -237,9 +239,9 @@ public class Tests {
 
     @Test
     void shouldCancelTransferFromFirstToSecondCard() {
-        int amount = 100;
         int balance1stCardStart = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
         int balance2ndCardStart = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
+        int amount = DataHelper.getAmount(balance1stCardStart);
         TransferPage transferPage = dashboardPage.depositToCard2();
         transferPage.checkHeading(transferPageHeader);
         transferPage.cancelTransfer(amount, cardNumbers.getFirstCardNumber(), cardNumbers.getSecondCardNumber());
@@ -254,9 +256,9 @@ public class Tests {
 
     @Test
     void shouldCancelTransferFromSecondToFirstCard() {
-        int amount = 100;
         int balance1stCardStart = dashboardPage.getCardBalance(cardNumbers.getFirstCardNumber());
         int balance2ndCardStart = dashboardPage.getCardBalance(cardNumbers.getSecondCardNumber());
+        int amount = DataHelper.getAmount(balance2ndCardStart);
         TransferPage transferPage = dashboardPage.depositToCard1();
         transferPage.checkHeading(transferPageHeader);
         transferPage.cancelTransfer(amount, cardNumbers.getSecondCardNumber(), cardNumbers.getFirstCardNumber());
