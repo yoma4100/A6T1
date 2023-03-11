@@ -18,9 +18,9 @@ public class DashboardPage {
 
     public int getCardBalance(String cardNumber) {
         String cardIndex = cardNumber.charAt(cardNumber.length() - 1) == '1' ? "1" : "2";
-        String elementSelector = ".list__item:nth-of-type(" + cardIndex + ") div";
+        String elementText = $(".list__item:nth-of-type(" + cardIndex + ") div").getText();
 
-        return DataHelper.getCardBalance(elementSelector);
+        return DataHelper.getCardBalance(elementText);
     }
 
     public TransferPage depositToCard1() {

@@ -8,7 +8,6 @@ import static com.codeborne.selenide.Condition.*;
 import static com.codeborne.selenide.Selenide.$;
 
 public class TransferPage {
-
     final SelenideElement heading = $(".heading_size_xl");
     final SelenideElement amountField = $("span[data-test-id='amount'] input");
     final SelenideElement fromField = $("span[data-test-id='from'] input");
@@ -46,7 +45,6 @@ public class TransferPage {
 
     public void transferMoney(String fromCardNumber, String toCardNumber) {
         setFromCard(fromCardNumber);
-        DataHelper.checkToCard(toCardNumber);
 
         toField.shouldBe(visible);
         toField.shouldHave(value(DataHelper.checkToCard(toCardNumber)));
@@ -57,7 +55,6 @@ public class TransferPage {
     public void transferMoney(int amount, String fromCardNumber, String toCardNumber) {
         setAmount(String.valueOf(amount));
         setFromCard(fromCardNumber);
-        DataHelper.checkToCard(toCardNumber);
 
         toField.shouldBe(visible);
         toField.shouldHave(value(DataHelper.checkToCard(toCardNumber)));
@@ -68,7 +65,6 @@ public class TransferPage {
     public void cancelTransfer(int amount, String fromCardNumber, String toCardNumber) {
         setAmount(String.valueOf(amount));
         setFromCard(fromCardNumber);
-        DataHelper.checkToCard(toCardNumber);
 
         toField.shouldBe(visible);
         toField.shouldHave(value(DataHelper.checkToCard(toCardNumber)));

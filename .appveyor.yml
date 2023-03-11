@@ -5,6 +5,7 @@ stack: jdk 11
 branches:
   only:
     - main
+    - task1
 
 build: off
 
